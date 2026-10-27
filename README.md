@@ -85,7 +85,7 @@ the mean of 60 repaints while rotating.
 | FreeCAD defaults (no VBO, render cache Auto) | 7,753 | 2.1 GB |
 | Per-part view, VBO | 65 | 3.0 GB |
 | Per-part view, VBO + render cache Distributed | 38 | 7.2 GB |
-| **Fast preview** (24 merged chunks, 3.5 M triangles) | **17** (60 Hz vsync limit) | 4.3 GB |
+| **Fast preview** (24 merged chunks, 3.5 M triangles), VBO only | **17** (60 Hz vsync limit) | 4.3–5.6 GB |
 
 ![Fast preview of the benchmark layout](docs/fast-preview.png)
 
@@ -93,9 +93,19 @@ The engine processes this model in 3 min 28 s with 16 workers: parse 70 s,
 transfer 42 s, then parts and the preview. Regenerate it with
 `.venv-occt8/bin/python tests/make_layout_step.py layout.step`.
 
-1. **View settings:** BigStep turns on `UseVBO` and `RenderCache = 1` when it
-   loads a model and when the workbench is activated. Live views pick up the
-   change. Turn it off in **BigStep ▸ Settings ▸ 3D view**.
+1. **View settings:** BigStep turns on `UseVBO` when it loads a model and when
+   the workbench is activated. Live views pick up the change. Turn it off in
+   **BigStep ▸ Settings ▸ 3D view**. BigStep does not touch the render cache:
+   *Distributed* helps Mesh::Feature links (65 → 38 ms above), but it makes
+   VBO Part::Feature links about 11× slower. With `tests/freecad_view_benchmark.py`
+   (40 pin-plate parts, 3,000 links, plain FreeCAD), the results were:
+
+   | Preferences | ms per frame |
+   |---|---|
+   | Defaults | 8,245 |
+   | UseVBO | 131 |
+   | UseVBO + RenderCache Distributed | 1,493 |
+
 2. **Fast preview:** the engine's last stage (`engine/preview.py`, about 15 s
    for the benchmark model with 16 processes) bakes all instances of each
    *area* into a few large meshes. Colors stay per instance through per-part

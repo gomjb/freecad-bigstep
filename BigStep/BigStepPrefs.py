@@ -21,7 +21,7 @@ DEFAULTS = {
 }
 
 
-PREFS_VERSION = 2
+PREFS_VERSION = 3
 
 
 def params():
@@ -31,6 +31,10 @@ def params():
         # heavy parts; lift a timeout still at an older default.
         if p.GetFloat("PartTimeout", 0.0) in (300.0, 900.0):
             p.SetFloat("PartTimeout", DEFAULTS["PartTimeout"])
+        # v3: pre-release builds also set View/RenderCache = 1 (Distributed); undo it.
+        view = App.ParamGet(VIEW_PARAM_PATH)
+        if p.GetInt("PrefsVersion", 1) == 2 and view.GetInt("RenderCache", 0) == 1:
+            view.SetInt("RenderCache", 0)
         p.SetInt("PrefsVersion", PREFS_VERSION)
     return p
 
@@ -59,10 +63,12 @@ def set(key, value):  # noqa: A001 - mirrors get()
 
 
 VIEW_PARAM_PATH = "User parameter:BaseApp/Preferences/View"
-# FreeCAD's defaults re-send every triangle to the GPU each frame (no VBO) and
-# rebuild the scene traversal per object; on assemblies with thousands of
-# instances that makes the view unusable (see README, "Smooth 3D view").
-VIEW_TUNING = {"UseVBO": True, "RenderCache": 1}   # 1 = Distributed
+# FreeCAD's default re-sends every triangle to the GPU each frame (no VBO); on
+# assemblies with thousands of instances that makes the view unusable (see
+# README, "Smooth 3D view").  RenderCache is deliberately left alone: the
+# Distributed cache helps Mesh::Features but makes VBO Part::Features ~11x
+# slower (tests/freecad_view_benchmark.py), and the fast preview does not need it.
+VIEW_TUNING = {"UseVBO": True}
 
 
 def tune_viewer():

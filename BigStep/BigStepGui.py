@@ -360,8 +360,7 @@ class SettingsDialog(QtWidgets.QDialog):
         self.angular.setRange(1, 90)
         self.angular.setSuffix("°")
         self.angular.setValue(Prefs.get("Angular"))
-        self.tune = QtWidgets.QCheckBox("Use OpenGL VBO and distributed render cache "
-                                        "(needed for smooth large models)")
+        self.tune = QtWidgets.QCheckBox("Use OpenGL VBO (needed for smooth large models)")
         self.tune.setChecked(Prefs.get("TuneViewer"))
         self.fastpv = QtWidgets.QCheckBox("Show large models through the fast merged preview")
         self.fastpv.setChecked(Prefs.get("FastPreview"))
